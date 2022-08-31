@@ -295,7 +295,7 @@ type RunOutput struct {
 }
 
 func getDaprCommand(config *RunConfig) (*exec.Cmd, error) {
-	daprCMD := binaryFilePath(defaultDaprBinPath(), "daprd")
+	daprCMD := lookupBinaryFilePath("daprd")
 	args := config.getArgs()
 	cmd := exec.Command(daprCMD, args...)
 	return cmd, nil

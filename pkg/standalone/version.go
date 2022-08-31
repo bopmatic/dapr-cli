@@ -26,8 +26,7 @@ var (
 
 // GetRuntimeVersion returns the version for the local Dapr runtime.
 func GetRuntimeVersion() string {
-	daprBinDir := defaultDaprBinPath()
-	daprCMD := binaryFilePath(daprBinDir, "daprd")
+	daprCMD := lookupBinaryFilePath("daprd")
 
 	out, err := exec.Command(daprCMD, "--version").Output()
 	if err != nil {
@@ -38,8 +37,7 @@ func GetRuntimeVersion() string {
 
 // GetDashboardVersion returns the version for the local Dapr dashboard.
 func GetDashboardVersion() string {
-	daprBinDir := defaultDaprBinPath()
-	dashboardCMD := binaryFilePath(daprBinDir, "dashboard")
+	dashboardCMD := lookupBinaryFilePath("dashboard")
 
 	out, err := exec.Command(dashboardCMD, "--version").Output()
 	if err != nil {
@@ -50,8 +48,7 @@ func GetDashboardVersion() string {
 
 // GetBuildInfo returns build info for the CLI and the local Dapr runtime.
 func GetBuildInfo(version string) string {
-	daprBinDir := defaultDaprBinPath()
-	daprCMD := binaryFilePath(daprBinDir, "daprd")
+	daprCMD := lookupBinaryFilePath("daprd")
 
 	strs := []string{
 		"CLI:",

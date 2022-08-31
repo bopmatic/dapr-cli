@@ -16,6 +16,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,6 +31,7 @@ var (
 	uninstallKubernetes       bool
 	uninstallAll              bool
 	uninstallContainerRuntime string
+	uninstallDir              string
 )
 
 // UninstallCmd is a command from removing a Dapr installation.
@@ -45,6 +47,9 @@ dapr uninstall --all
 
 # Uninstall from Kubernetes
 dapr uninstall -k
+
+# Uninstall Dapr from non-default install directory (default is $HOME/.dapr)
+dapr uninstall --install-dir <path-to-install-directory>
 `,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("network", cmd.Flags().Lookup("network"))
@@ -54,12 +59,17 @@ dapr uninstall -k
 		var err error
 
 		if uninstallKubernetes {
+			if len(strings.TrimSpace(uninstallDir)) != 0 {
+				print.FailureStatusEvent(os.Stderr, "--install-dir is only valid for self-hosted mode")
+				os.Exit(1)
+			}
+
 			print.InfoStatusEvent(os.Stdout, "Removing Dapr from your cluster...")
 			err = kubernetes.Uninstall(uninstallNamespace, uninstallAll, timeout)
 		} else {
 			print.InfoStatusEvent(os.Stdout, "Removing Dapr from your machine...")
 			dockerNetwork := viper.GetString("network")
-			err = standalone.Uninstall(uninstallAll, dockerNetwork, uninstallContainerRuntime)
+			err = standalone.Uninstall(uninstallAll, dockerNetwork, uninstallContainerRuntime, uninstallDir)
 		}
 
 		if err != nil {
@@ -71,6 +81,8 @@ dapr uninstall -k
 }
 
 func init() {
+	defaultInstallDir := standalone.DefaultDaprDirPath()
+
 	UninstallCmd.Flags().BoolVarP(&uninstallKubernetes, "kubernetes", "k", false, "Uninstall Dapr from a Kubernetes cluster")
 	UninstallCmd.Flags().UintVarP(&timeout, "timeout", "", 300, "The timeout for the Kubernetes uninstall")
 	UninstallCmd.Flags().BoolVar(&uninstallAll, "all", false, "Remove .dapr directory, Redis, Placement and Zipkin containers on local machine, and CRDs on a Kubernetes cluster")
@@ -78,5 +90,6 @@ func init() {
 	UninstallCmd.Flags().StringVarP(&uninstallNamespace, "namespace", "n", "dapr-system", "The Kubernetes namespace to uninstall Dapr from")
 	UninstallCmd.Flags().BoolP("help", "h", false, "Print this help message")
 	UninstallCmd.Flags().StringVarP(&uninstallContainerRuntime, "container-runtime", "", "docker", "The container runtime to use (defaults to docker)")
+	UninstallCmd.Flags().StringVarP(&uninstallDir, "install-dir", "", defaultInstallDir, "The directory to uninstall dapr from, for example: /usr/local/dapr")
 	RootCmd.AddCommand(UninstallCmd)
 }

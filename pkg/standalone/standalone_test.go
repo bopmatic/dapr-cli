@@ -304,3 +304,16 @@ func TestIsAirGapInit(t *testing.T) {
 		})
 	}
 }
+
+func TestNonDefaultInstall(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "daprtest-nondefault-install-*")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir) // clean up
+
+	err = Init(latestVersion, latestVersion, "", true, "", "", "docker", "", tmpDir)
+	assert.NoError(t, err)
+
+	daprCMD := binaryFilePathWithDir(daprBinPath(tmpDir), "daprd")
+
+	assert.FileExists(t, daprCMD)
+}
