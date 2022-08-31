@@ -55,6 +55,7 @@ type RunConfig struct {
 	UnixDomainSocket   string `arg:"unix-domain-socket"`
 	InternalGRPCPort   int    `arg:"dapr-internal-grpc-port"`
 	EnableAPILogging   bool   `arg:"enable-api-logging"`
+	DaprPathCmdFlag    string
 }
 
 func (meta *DaprMeta) newAppID() string {
@@ -295,7 +296,11 @@ type RunOutput struct {
 }
 
 func getDaprCommand(config *RunConfig) (*exec.Cmd, error) {
-	daprCMD := binaryFilePath(defaultDaprBinPath(), "daprd")
+	daprCMD, err := lookupBinaryFilePath(config.DaprPathCmdFlag, "daprd")
+	if err != nil {
+		return nil, err
+	}
+
 	args := config.getArgs()
 	cmd := exec.Command(daprCMD, args...)
 	return cmd, nil
